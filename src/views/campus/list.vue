@@ -552,17 +552,17 @@ const getLocationForCompany = (company) => {
             <div
               v-for="opt in locationOptions.slice(1)"
               :key="opt.value"
-              class="filter-option-container"
             >
               <van-radio
                 :name="opt.value"
               >
                 {{ opt.text }}
-                <template v-if="getCompanyForLocation(opt.value)">
+                <!-- class="filter-option-container" -->
+                <!-- <template v-if="getCompanyForLocation(opt.value)">
                   <span class="location-company-tag">
                     {{ getCompanyForLocation(opt.value) }}
                   </span>
-                </template>
+                </template> -->
               </van-radio>
             </div>
           </van-radio-group>

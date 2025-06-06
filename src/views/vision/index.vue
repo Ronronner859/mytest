@@ -20,7 +20,7 @@ import Footer from '@/components/footer.vue';
           <div class="vision-divider"></div>
           <p class="vision-cn">成为全球智能制造领域的领先服务提供商</p>
           <p class="vision-en">
-            Be the Leading Manufacturing Service Provider<br />of Global Digital
+           To Be the Leading Manufacturing Service Provider<br />of Global Digital
             Manufacturing Industries
           </p>
         </div>

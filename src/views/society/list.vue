@@ -3,6 +3,9 @@ import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { mockSocietyCategories } from "@/mock/societyJobs.js";
 import { debounce } from 'lodash-es';
+import { Toast, Dialog } from 'vant';
+import QRCode from 'qrcode';
+// import wx from 'weixin-js-sdk'; // 暂时注释掉微信SDK
 
 const route = useRoute();
 const router = useRouter()
@@ -19,6 +22,10 @@ const pageSize = 6;
 const expandedJobs = ref(new Set());
 const showSearchHistory = ref(false);
 const showSearchSuggestions = ref(false);
+const showShareSheet = ref(false);
+const currentShareJob = ref(null);
+const showQRCode = ref(false);
+const qrCodeUrl = ref('');
 
 // 搜索历史记录
 const searchHistory = ref(JSON.parse(localStorage.getItem('searchHistory') || '[]'));
@@ -517,6 +524,62 @@ const getCompanyForLocation = (location) => {
 const getLocationForCompany = (company) => {
   return companyLocationMap[company] || '';
 };
+
+// 分享选项
+const shareOptions = [
+  // { name: '微信', icon: 'wechat', className: 'share-wechat' },
+  // { name: '朋友圈', icon: 'wechat-moments', className: 'share-moments' },
+  // { name: '复制链接', icon: 'link', className: 'share-link' },
+  { name: '二维码', icon: 'qrcode', className: 'share-qrcode' },
+];
+
+// 生成二维码
+const generateQRCode = async (url) => {
+  try {
+    const qrCode = await QRCode.toDataURL(url, {
+      width: 200,
+      margin: 2,
+      color: {
+        dark: '#1976d2',
+        light: '#ffffff'
+      }
+    });
+    qrCodeUrl.value = qrCode;
+    showQRCode.value = true;
+  } catch (err) {
+    Toast.fail('生成二维码失败');
+  }
+};
+
+// 处理分享
+const handleShare = (job, event) => {
+  event.stopPropagation(); // 阻止事件冒泡
+  currentShareJob.value = job;
+  showShareSheet.value = true;
+};
+
+// 处理分享选项点击
+const onShareSelect = async (option) => {
+  if (!currentShareJob.value) return;
+  
+  const jobUrl = `${window.location.origin}/society/detail/${currentShareJob.value.id}`;
+  
+  switch (option.name) {
+    case '二维码':
+      await generateQRCode(jobUrl);
+      break;
+    // 其他分享方式暂时注释掉
+    // case '复制链接':
+    // case '微信':
+    // case '朋友圈':
+  }
+  showShareSheet.value = false;
+};
+
+// 关闭分享面板
+const onShareCancel = () => {
+  showShareSheet.value = false;
+};
 </script>
 
 <template>
@@ -584,17 +647,17 @@ const getLocationForCompany = (company) => {
             <div
               v-for="opt in locationOptions.slice(1)"
               :key="opt.value"
-              class="filter-option-container"
             >
               <van-radio
                 :name="opt.value"
               >
                 {{ opt.text }}
-                <template v-if="getCompanyForLocation(opt.value)">
+              <!-- class="filter-option-container" -->
+               <!-- <template v-if="getCompanyForLocation(opt.value)">
                   <span class="location-company-tag">
                     {{ getCompanyForLocation(opt.value) }}
                   </span>
-                </template>
+                </template> -->
               </van-radio>
             </div>
           </van-radio-group>
@@ -718,7 +781,11 @@ const getLocationForCompany = (company) => {
                 </van-tag>
               </div>
               <div class="job-icons">
-                <van-icon name="share-o" class="action-icon" />
+                <van-icon 
+                  name="share-o" 
+                  class="action-icon"
+                  @click="(e) => handleShare(job, e)" 
+                />
                 <van-icon 
                   :name="expandedJobs.has(job.id) ? 'arrow-up' : 'arrow-down'" 
                   @click.stop="(e) => toggleJobExpand(job.id, e)"
@@ -776,6 +843,28 @@ const getLocationForCompany = (company) => {
         <van-icon name="arrow-up" />
       </div>
     </transition>
+
+    <!-- 添加分享面板组件 -->
+    <van-share-sheet
+      v-model:show="showShareSheet"
+      title="分享职位"
+      :options="shareOptions"
+      @select="onShareSelect"
+      @cancel="onShareCancel"
+    />
+
+    <!-- 在 template 中添加二维码弹窗组件，放在分享面板后面 -->
+    <van-dialog
+      v-model:show="showQRCode"
+      title="扫描二维码分享"
+      :showConfirmButton="false"
+      class="qrcode-dialog"
+    >
+      <div class="qrcode-container">
+        <img :src="qrCodeUrl" alt="职位二维码" />
+        <p class="qrcode-tip">扫描上方二维码查看职位详情</p>
+      </div>
+    </van-dialog>
   </div>
 </template>
 
@@ -1529,5 +1618,46 @@ const getLocationForCompany = (company) => {
 .company-location-tag::before {
   content: "对应地点：";
   color: #999;
+}
+
+// 在 style 中只保留二维码相关样式
+.share-qrcode {
+  color: #333;
+}
+
+.qrcode-dialog {
+  :deep(.van-dialog) {
+    width: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  :deep(.van-dialog__header) {
+    padding: 16px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+}
+
+.qrcode-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  
+  img {
+    width: 200px;
+    height: 200px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .qrcode-tip {
+    color: #666;
+    font-size: 14px;
+    text-align: center;
+    margin: 0;
+  }
 }
 </style>

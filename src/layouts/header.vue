@@ -686,7 +686,7 @@ const handleMobileSearch = () => {
 
 @media screen and (max-width: 480px) {
   .header-container {
-    height: 35vh;
+    height: 25vh;
   }
   
   .banner {
