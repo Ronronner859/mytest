@@ -562,7 +562,8 @@ const handleShare = (job, event) => {
 const onShareSelect = async (option) => {
   if (!currentShareJob.value) return;
   
-  const jobUrl = `${window.location.origin}/society/detail/${currentShareJob.value.id}`;
+  // 修改为正确的路由路径
+  const jobUrl = `${window.location.origin}/social-recruitment/society/job/${currentShareJob.value.id}`;
   
   switch (option.name) {
     case '二维码':
