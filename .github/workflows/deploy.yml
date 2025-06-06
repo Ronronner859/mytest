@@ -36,6 +36,16 @@ jobs:
       # 列出 dist 目录中的文件，确保构建成功并有产物
       - name: List dist directory
         run: ls -l dist/
+
+      - name: Deploy with SSH
+        uses: easingthemes/ssh-deploy@v2.0.7
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          remote-server: 'root@182.92.100.57'
+          remote-path: '/www/rpworld_hr'
+          local-path: './dist/'
+          rsync-options: '-avz --progress --verbose'
+      
       # 产物上传服务器
       - name: Upload to Deploy Server
         uses: easingthemes/ssh-deploy@v2.0.7
