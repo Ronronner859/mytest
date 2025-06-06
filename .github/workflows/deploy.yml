@@ -37,7 +37,7 @@ jobs:
       - name: List dist directory
         run: ls -l dist/
       # 产物上传服务器
-      - name: Upload to Deploy Server
+      - name: Upload to Deploy Server@root 
         uses: easingthemes/ssh-deploy@v2.0.7
         env:
           # 免密登录的秘钥
